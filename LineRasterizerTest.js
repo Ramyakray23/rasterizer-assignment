@@ -11,18 +11,38 @@ let rasterizer;
 
 function setup() {
     createCanvas(CANVAS_SIZE, CANVAS_SIZE);
-    
+
     // Initialize endpoints
     endpoint1 = new Point(10, 10);
     endpoint2 = new Point(40, 35);
-    
-    // Create rasterizer instance
+
+    // Default algorithm on page load
     rasterizer = new BresenhamRasterizer();
 }
 
+document.getElementById("algoSelect").addEventListener("change", function (e) {
+    const algo = e.target.value;
+
+    if (algo === "bresenham") {
+        rasterizer = new BresenhamRasterizer();
+    } 
+    else if (algo === "dda") {
+        rasterizer = new DDARasterizer();
+    } 
+    else if (algo === "midpoint") {
+        rasterizer = new MidpointCircleRasterizer();
+    } 
+    else if (algo === "wu") {
+        rasterizer = new WuRasterizer();
+    }
+
+    redraw(); // re-render with new algorithm
+});
+
+
 function draw() {
     background(255);
-    
+
     // Draw grid
     stroke(220);
     strokeWeight(1);
@@ -30,17 +50,17 @@ function draw() {
         line(i * CELL_SIZE, 0, i * CELL_SIZE, CANVAS_SIZE);
         line(0, i * CELL_SIZE, CANVAS_SIZE, i * CELL_SIZE);
     }
-    
+
     // Get rasterized pixels
     const rasterizedPixels = rasterizer.rasterize(endpoint1, endpoint2);
-    
+
     // Draw rasterized pixels as filled cells
     fill(100, 150, 255, 150);
     noStroke();
     for (let p of rasterizedPixels) {
         rect(p.x * CELL_SIZE, p.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     }
-    
+
     // Draw reference line (1px thin line)
     stroke(255, 0, 0);
     strokeWeight(1);
@@ -48,7 +68,7 @@ function draw() {
          endpoint1.y * CELL_SIZE + CELL_SIZE/2,
          endpoint2.x * CELL_SIZE + CELL_SIZE/2, 
          endpoint2.y * CELL_SIZE + CELL_SIZE/2);
-    
+
     // Draw endpoints
     fill(255, 100, 100);
     stroke(200, 50, 50);
@@ -70,7 +90,7 @@ function mousePressed() {
         dragging = endpoint1;
         return;
     }
-    
+
     // Check if clicking on endpoint2
     const d2 = dist(mouseX, mouseY, 
                     endpoint2.x * CELL_SIZE + CELL_SIZE/2, 
@@ -86,7 +106,7 @@ function mouseDragged() {
         // Convert mouse position to grid coordinates
         const gridX = constrain(floor(mouseX / CELL_SIZE), 0, GRID_SIZE - 1);
         const gridY = constrain(floor(mouseY / CELL_SIZE), 0, GRID_SIZE - 1);
-        
+
         dragging.x = gridX;
         dragging.y = gridY;
     }
